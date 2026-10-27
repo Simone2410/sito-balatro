@@ -14,9 +14,14 @@ import type { GameState } from '../game/types';
         Le mani sono finite.
       }
     </p>
-    <button #btn type="button" class="btn btn-primary" (click)="newGame.emit()">
-      Nuova partita <kbd aria-hidden="true">N</kbd>
-    </button>
+    <div data-nav-row>
+      <button #btn type="button" class="btn btn-primary" aria-describedby="d-end" (click)="newGame.emit()">
+        Nuova partita <kbd aria-hidden="true">N</kbd>
+      </button>
+    </div>
+    <span id="d-end" class="sr-only">
+      Pulsante Nuova partita. Premi Invio, Spazio o il tasto N per iniziare una nuova partita.
+    </span>
   `,
 })
 export class EndScreenComponent {

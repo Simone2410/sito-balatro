@@ -3,8 +3,11 @@ import { HAND_ORDER, HAND_TABLE, MAX_JOKERS } from '../game/constants';
 import { JOKERS, JOKER_IDS } from '../game/jokers';
 
 export const SHORTCUTS: [string, string][] = [
-  ['← → ↑ ↓', 'Muoviti tra le carte'],
+  ['← →', 'Muoviti tra le carte, o tra i pulsanti della stessa riga'],
+  ['↑ ↓', 'Passa tra le righe: Aiuto / Nuova partita, mano, Gioca / Scarta / Ordina'],
   ['Home / Fine', 'Prima / ultima carta'],
+  ['Invio o Spazio', 'Attiva il pulsante su cui ti trovi (sulle carte: Spazio seleziona)'],
+  ['P', 'Nuova partita (abbandona quella in corso, con conferma)'],
   ['Spazio', 'Seleziona o deseleziona la carta (da 1 a 5)'],
   ['1 – 8', 'Seleziona o deseleziona la carta in quella posizione'],
   ['G oppure Invio', 'Gioca le carte selezionate'],

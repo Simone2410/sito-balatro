@@ -26,7 +26,10 @@ Il service worker è attivo solo nella build di produzione. Per provare PWA e of
 
 | Tasto | Azione |
 |---|---|
-| ← → ↑ ↓, Home, Fine | Muoversi tra le carte |
+| ← → | Muoversi tra le carte o tra i pulsanti di una riga |
+| ↑ ↓ | Passare tra le righe (Aiuto/Nuova partita, mano, Gioca/Scarta/Ordina) |
+| Home, Fine | Prima / ultima carta |
+| P | Nuova partita (con conferma) |
 | Spazio | Seleziona / deseleziona la carta |
 | 1–8 | Seleziona la carta in quella posizione |
 | G o Invio | Gioca |
@@ -53,6 +56,7 @@ ngsw-config.json configurazione del service worker
 - Seme comunicato da simbolo, nome e colore. Selezione comunicata da rialzo, bordo doppio e spunta.
 - Annuncio dopo ogni mano (live region `role="status"`): combinazione, punti, punti mancanti. Annunciati anche scarti, acquisti, round, aiuto aggiornamenti.
 - Dopo giocata/scarto/ordinamento il focus torna sulla mano (stessa carta o posizione più vicina); aprendo il negozio va sul titolo; l'aiuto usa `<dialog>` nativo e restituisce il focus alla chiusura.
+- Le frecce raggiungono tutti i pulsanti (righe `data-nav-row`). Ogni pulsante ha una descrizione vocale (`aria-describedby`) con tasto e stato, es. "Pulsante Gioca. Premi Invio, Spazio o il tasto G per giocarle".
 - Pulsanti non disponibili con `aria-disabled` (il focus non si perde).
 - Colori con contrasto AA, `prefers-reduced-motion` rispettato, nessuna info solo in hover, aree toccabili ≥ 44px.
 

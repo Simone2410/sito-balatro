@@ -15,7 +15,7 @@ import type { GameState, JokerId } from '../game/types';
     @if (state().shop.length === 0) {
       <p class="muted">La bottega è vuota: hai comprato tutto.</p>
     } @else {
-      <ul class="shop-list">
+      <ul class="shop-list" data-nav-row>
         @for (id of state().shop; track id; let i = $index) {
           <li class="shop-item">
             <h3>{{ defs[id].name }}</h3>
@@ -23,6 +23,7 @@ import type { GameState, JokerId } from '../game/types';
             <button
               type="button"
               class="btn"
+              [attr.aria-describedby]="'d-buy-' + id"
               [attr.aria-disabled]="!canBuy(id)"
               (click)="buy.emit(id)"
             >
@@ -31,13 +32,26 @@ import type { GameState, JokerId } from '../game/types';
             @if (!canBuy(id)) {
               <p class="muted">{{ why(id) }}</p>
             }
+            <span [id]="'d-buy-' + id" class="sr-only">
+              Pulsante Compra {{ defs[id].name }}, {{ defs[id].price }} monete.
+              @if (canBuy(id)) {
+                Premi Invio, Spazio o il tasto {{ i + 1 }} per comprarlo.
+              } @else {
+                Non disponibile: {{ why(id) }}
+              }
+            </span>
           </li>
         }
       </ul>
     }
-    <button type="button" class="btn btn-primary" (click)="next.emit()">
-      Prossimo round <kbd aria-hidden="true">N</kbd>
-    </button>
+    <div data-nav-row>
+      <button type="button" class="btn btn-primary" aria-describedby="d-next" (click)="next.emit()">
+        Prossimo round <kbd aria-hidden="true">N</kbd>
+      </button>
+    </div>
+    <span id="d-next" class="sr-only">
+      Pulsante Prossimo round. Premi Invio, Spazio o il tasto N per uscire dalla bottega e iniziare il round successivo.
+    </span>
   `,
 })
 export class ShopComponent {

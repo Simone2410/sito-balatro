@@ -20,12 +20,21 @@ import { ShopComponent } from './shop';
     <a class="skip" href="#main">Vai al gioco</a>
     <header class="top">
       <h1>Alambicco</h1>
-      <div class="top-actions">
-        <button type="button" class="btn btn-small" (click)="store.helpOpen.set(true)">
+      <div class="top-actions" data-nav-row>
+        <button type="button" class="btn btn-small" aria-describedby="d-help" (click)="store.helpOpen.set(true)">
           Aiuto <kbd aria-hidden="true">?</kbd>
         </button>
-        <button type="button" class="btn btn-small" (click)="confirmNew()">Nuova partita</button>
+        <button type="button" class="btn btn-small" aria-describedby="d-new" (click)="confirmNew()">
+          Nuova partita <kbd aria-hidden="true">P</kbd>
+        </button>
       </div>
+      <p id="d-help" class="sr-only">
+        Pulsante Aiuto. Premi Invio, Spazio o il tasto punto interrogativo per aprire l'elenco di tutte le scorciatoie.
+      </p>
+      <p id="d-new" class="sr-only">
+        Pulsante Nuova partita. Premi Invio, Spazio o il tasto P per abbandonare la partita in corso e
+        iniziarne una nuova. Ti verrà chiesta conferma.
+      </p>
     </header>
 
     @if (updateReady()) {
@@ -55,20 +64,33 @@ import { ShopComponent } from './shop';
             (toggle)="store.dispatch({ type: 'toggleCard', id: $event })"
             (play)="play()"
           />
-          <div class="actions">
-            <button type="button" class="btn btn-primary" [attr.aria-disabled]="!canPlay()" (click)="play()">
+          <p id="d-hand" class="sr-only">
+            Sei sulla mano. Freccia destra e sinistra per muoverti tra le carte, Spazio per selezionare
+            o deselezionare, Invio o G per giocare, S per scartare, freccia giù per andare ai pulsanti.
+          </p>
+          <div class="actions" data-nav-row>
+            <button type="button" class="btn btn-primary" aria-describedby="d-play"
+              [attr.aria-disabled]="!canPlay()" (click)="play()">
               Gioca <kbd aria-hidden="true">G</kbd>
             </button>
-            <button type="button" class="btn" [attr.aria-disabled]="!canDiscard()" (click)="discard()">
+            <button type="button" class="btn" aria-describedby="d-discard"
+              [attr.aria-disabled]="!canDiscard()" (click)="discard()">
               Scarta ({{ s().discardsLeft }}) <kbd aria-hidden="true">S</kbd>
             </button>
-            <button type="button" class="btn" (click)="sort()">
+            <button type="button" class="btn" aria-describedby="d-sort" (click)="sort()">
               Ordina: {{ s().sortMode === 'rank' ? 'per valore' : 'per seme' }}
               <kbd aria-hidden="true">O</kbd>
             </button>
           </div>
+          <p id="d-play" class="sr-only">{{ playHelp() }}</p>
+          <p id="d-discard" class="sr-only">{{ discardHelp() }}</p>
+          <p id="d-sort" class="sr-only">
+            Pulsante Ordina. Ora la mano è ordinata {{ s().sortMode === 'rank' ? 'per valore' : 'per seme' }}.
+            Premi Invio, Spazio o il tasto O per ordinarla {{ s().sortMode === 'rank' ? 'per seme' : 'per valore' }}.
+          </p>
           <p class="hint">
-            Frecce per muoverti, Spazio per selezionare, G per giocare, S per scartare, ? per l'aiuto.
+            Frecce per muoverti (anche tra i pulsanti), Spazio per selezionare, G per giocare,
+            S per scartare, P per una nuova partita, ? per l'aiuto.
           </p>
           <app-result-panel [selection]="selection()" [last]="s().lastResult" />
           <app-joker-bar [jokers]="s().jokers" />
@@ -102,6 +124,22 @@ export class App {
   protected readonly canDiscard = computed(
     () => this.s().selected.length > 0 && this.s().discardsLeft > 0,
   );
+
+  protected readonly playHelp = computed(() => {
+    const n = this.s().selected.length;
+    return n > 0
+      ? `Pulsante Gioca. Hai selezionato ${n} ${n === 1 ? 'carta' : 'carte'}. ` +
+          'Premi Invio, Spazio o il tasto G per giocarle.'
+      : 'Pulsante Gioca, non disponibile: seleziona prima da 1 a 5 carte. Poi premi Invio, Spazio o il tasto G.';
+  });
+  protected readonly discardHelp = computed(() => {
+    const s = this.s();
+    if (s.discardsLeft <= 0) return 'Pulsante Scarta, non disponibile: non hai più scarti in questo round.';
+    if (s.selected.length === 0) {
+      return `Pulsante Scarta, non disponibile: seleziona prima le carte da scartare. Scarti rimasti: ${s.discardsLeft}.`;
+    }
+    return `Pulsante Scarta. Scarti rimasti: ${s.discardsLeft}. Premi Invio, Spazio o il tasto S per scartare le carte selezionate.`;
+  });
 
   constructor() {
     const sw = inject(SwUpdate);
@@ -138,6 +176,40 @@ export class App {
     this.store.newGame();
   }
 
+  /**
+   * Frecce su tutti i comandi. I comandi sono organizzati in righe (`data-nav-row`):
+   * sinistra/destra scorrono dentro la riga, su/giù passano alla riga precedente/successiva.
+   * Le carte gestiscono da sole sinistra/destra (HandComponent); su/giù arrivano qui.
+   */
+  private navigate(e: KeyboardEvent): void {
+    const target = e.target as HTMLElement | null;
+    const row = target?.closest<HTMLElement>('[data-nav-row]');
+    const current = target?.closest<HTMLElement>('button, app-card');
+    if (!row || !current) return;
+    const itemsOf = (r: HTMLElement) => Array.from(r.querySelectorAll<HTMLElement>('button, app-card'));
+    const items = itemsOf(row);
+    const i = items.indexOf(current);
+
+    let next: HTMLElement | undefined;
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      next = items[i + (e.key === 'ArrowRight' ? 1 : -1)];
+    } else {
+      const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-nav-row]'));
+      const step = e.key === 'ArrowDown' ? 1 : -1;
+      for (let r = rows.indexOf(row) + step; r >= 0 && r < rows.length && !next; r += step) {
+        const list = itemsOf(rows[r]);
+        if (list.length === 0) continue;
+        next =
+          rows[r].getAttribute('role') === 'listbox'
+            ? (rows[r].querySelector<HTMLElement>('[tabindex="0"]') ?? list[0])
+            : list[Math.min(i, list.length - 1)];
+      }
+    }
+    if (!next) return;
+    e.preventDefault();
+    next.focus();
+  }
+
   @HostListener('document:keydown', ['$event'])
   protected onKey(e: KeyboardEvent): void {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -146,7 +218,12 @@ export class App {
       this.store.helpOpen.set(true);
       return;
     }
-    if (this.store.helpOpen() || e.repeat) return;
+    if (this.store.helpOpen() || e.repeat || e.defaultPrevented) return;
+
+    if (e.key.startsWith('Arrow')) {
+      this.navigate(e);
+      return;
+    }
 
     const key = e.key.toLowerCase();
     const s = this.s();
@@ -154,6 +231,8 @@ export class App {
 
     if (key === 'a') {
       this.store.dispatch({ type: 'announce', text: this.store.status() });
+    } else if (key === 'p') {
+      this.confirmNew();
     } else if (s.phase === 'playing') {
       if (key === 'g') this.play();
       else if (key === 's') this.discard();

@@ -13,6 +13,8 @@ import { CardComponent } from './card';
     role: 'listbox',
     'aria-multiselectable': 'true',
     'aria-orientation': 'horizontal',
+    'data-nav-row': '',
+    'aria-describedby': 'd-hand',
     '[attr.aria-label]': 'label()',
     '(keydown)': 'onKeydown($event)',
   },
@@ -90,13 +92,12 @@ export class HandComponent {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const i = this.activeIndex();
     switch (e.key) {
+      // Su/giù non sono gestiti qui: passano alla riga di pulsanti (vedi App.navigate).
       case 'ArrowRight':
-      case 'ArrowDown':
         e.preventDefault();
         this.focusAt(i + 1);
         break;
       case 'ArrowLeft':
-      case 'ArrowUp':
         e.preventDefault();
         this.focusAt(i - 1);
         break;
